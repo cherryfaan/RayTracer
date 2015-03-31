@@ -39,11 +39,14 @@ void PointLight::shade( Ray3D& ray ) {
 	Colour Is = (*ray.intersection.mat).specular*(std::max(0.0,pow(V.dot(De),(*ray.intersection.mat).specular_exp))*_col_specular);
 	
 	//Phong shading
-	//ray.col = Ia + Id + Is;
+	ray.col = Ia + Id + Is;
+	
 	//Only diffuse and ambient
 	//ray.col = Ia + Id;
+	
 	//Scene signature
-	ray.col = (*ray.intersection.mat).diffuse;
+	//ray.col = (*ray.intersection.mat).diffuse;
+	
 	ray.col.clamp();
 }
 
