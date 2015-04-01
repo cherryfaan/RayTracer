@@ -113,3 +113,80 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
         }       
         return intersection;
 }
+
+bool Cylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
+                const Matrix4x4& modelToWorld){
+        //UnitCylinder with unitCircle on top and bottom in xy-plane and z = 1 and z = -1 along z axis  
+        //quadratic function for unit cylinder is x^2 + y^2 = 1, centered at origin
+        bool intersection = false;
+        bool intersect_top = false;
+        bool intersect_bot = false;
+
+        Ray3D rayObjectSpace = Ray3D(worldToModel * ray.origin, worldToModel * ray.dir);
+
+        double cx = rayObjectSpace.origin[0];
+        double cy = rayObjectSpace.origin[1];
+        double cz = rayObjectSpace.origin[2];
+        double dx = rayObjectSpace.dir[0];
+        double dy = rayObjectSpace.dir[1];
+        double dz = rayObjectSpace.dir[2];
+        double t_value;
+
+        double t_value1;
+        //ignore z first to find intersection on quadratic wall
+        double a = dx * dx + dy * dy;
+        double b = 2 * dx * cx + 2 * dy * cy;
+        double c = cx * cx + cy * cy - 1;
+        double discriminant = b * b - 4 * a * c;
+        //find possible t_value on quadratic wall
+        if(discriminant >= 0){
+                double root1 = (-b + sqrt(discriminant)) / (2 * a);
+                double root2 = (-b - sqrt(discriminant)) / (2 * a);
+                if (root1 > 0 && root2 > 0 && root1 < root2){
+                        t_value1 = root1;
+                        intersection = true;
+                }else if (root2 > 0 && root1 <= 0) {
+                        t_value1 = root2;
+                        intersection = true;
+                }else if (root1 > 0 && root2 <= 0){
+                        t_value1 = root1;
+                        intersection = true;
+
+                }
+        }
+
+        //See if there is intersection on top and bottom of cylinder
+        double t_valueTop = (1 - cz)/dz;
+        double t_valueBot = (-1 - cz)/dz;
+        Point3D intersectTopPoint = rayObjectSpace.origin + t_valueTop * rayObjectSpace.dir;
+        Point3D intersectBotPoint = rayObjectSpace.origin + t_valueBot * rayObjectSpace.dir;
+
+        //Find the smallest positive intersection inside the region from  multiple intersections
+        //which is smallest t_value
+        Point3D intersectionPoint1 = rayObjectSpace.origin + t_value1 * rayObjectSpace.dir;
+        std::vector<double> t_value_candidates;
+        std::vector<double> good_t_value;
+        t_value_candidates.push_back(t_value1);
+        t_value_candidates.push_back(t_valueTop);
+        t_value_candidates.push_back(t_valueBot);
+        for(unsigned int i = 0; i<t_value_candidates.size(); i++){
+                t_value = t_value_candidates[i];
+                Point3D point = rayObjectSpace.origin + t_value * rayObjectSpace.dir;
+                if(t_value > 0 && point[2] >= -1 && point[2] <=1){
+                        good_t_value.push_back(t_value);
+                }
+        }
+        if(good_t_value.size() != 0){
+                t_value = *std::min_element(good_t_value.begin(), good_t_value.end());
+        }
+        Point3D intersectionPoint = rayObjectSpace.origin + t_value * rayObjectSpace.dir;
+        if(ray.intersection.none || t_value < ray.intersection.t_value){
+                intersection = true;
+                ray.intersection.point = modelToWorld * intersectionPoint;
+                ray.intersection.normal = worldToModel.transpose()*Vector3D(intersectionPoint[0], intersectionPoint[1], intersectionPoint[2]);
+                ray.intersection.normal.normalize();
+                ray.intersection.none = false;
+                ray.intersection.t_value = t_value;
+        }
+        return intersection;
+} 
