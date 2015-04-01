@@ -123,8 +123,6 @@ bool Cylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
         //UnitCylinder with unitCircle on top and bottom in xy-plane and z = 1 and z = -1 along z axis  
         //quadratic function for unit cylinder is x^2 + y^2 = 1, centered at origin
         bool intersection = false;
-        bool intersect_top = false;
-        bool intersect_bot = false;
 
         Ray3D rayObjectSpace = Ray3D(worldToModel * ray.origin, worldToModel * ray.dir);
 
@@ -182,6 +180,9 @@ bool Cylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
         }
         if(good_t_value.size() != 0){
                 t_value = *std::min_element(good_t_value.begin(), good_t_value.end());
+                if(t_value == t_valueTop or t_value == t_valueBot){
+                        intersection = true;
+
         }
         Point3D intersectionPoint = rayObjectSpace.origin + t_value * rayObjectSpace.dir;
         if(ray.intersection.none || t_value < ray.intersection.t_value){
