@@ -34,3 +34,10 @@ public:
 			const Matrix4x4& modelToWorld );
 };
 
+// Cylinder with unit circle on xz-plane and height = 1 on y-axis
+class Cylinder : public SceneObject {
+public:
+        bool intersect( Ray3D& ray, const Matrix4x4& worldToModel,
+                        const Matrix4x4& modelToWorld );
+};
+
