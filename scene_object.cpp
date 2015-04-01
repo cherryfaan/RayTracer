@@ -146,13 +146,10 @@ bool Cylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
                 double root2 = (-b - sqrt(discriminant)) / (2 * a);
                 if (root1 > 0 && root2 > 0 && root1 < root2){
                         t_value1 = root1;
-                        intersection = true;
                 }else if (root2 > 0 && root1 <= 0) {
                         t_value1 = root2;
-                        intersection = true;
                 }else if (root1 > 0 && root2 <= 0){
                         t_value1 = root1;
-                        intersection = true;
 
                 }
         }
@@ -180,16 +177,25 @@ bool Cylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
         }
         if(good_t_value.size() != 0){
                 t_value = *std::min_element(good_t_value.begin(), good_t_value.end());
-                if(t_value == t_valueTop or t_value == t_valueBot){
-                        intersection = true;
-
+                intersection = true;
         }
+
         Point3D intersectionPoint = rayObjectSpace.origin + t_value * rayObjectSpace.dir;
         if(ray.intersection.none || t_value < ray.intersection.t_value){
                 intersection = true;
                 ray.intersection.point = modelToWorld * intersectionPoint;
-                ray.intersection.normal = worldToModel.transpose()*Vector3D(intersectionPoint[0], intersectionPoint[1], intersectionPoint[2]);
-                ray.intersection.normal.normalize();
+                if(t_value == t_valueTop){
+                        ray.intersection.normal = worldToModel.transpose()*Vector3D(0, 0, 1);
+                        ray.intersection.normal.normalize();
+                }
+                else if (t_value == t_valueBot){
+                        ray.intersection.normal = worldToModel.transpose()*Vector3D(0, 0, -1);
+                        ray.intersection.normal.normalize();
+                }
+                else if (t_value == t_value1){
+                        ray.intersection.normal = worldToModel.transpose()*Vector3D(intersectionPoint[0], intersectionPoint[1], intersectionPoint[2]);
+                        ray.intersection.normal.normalize();
+                }
                 ray.intersection.none = false;
                 ray.intersection.t_value = t_value;
         }
